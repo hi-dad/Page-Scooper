@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Page Scooper",
+  "version": "0.1.0",
+  "description": "Teach any page what to collect, then copy everything together.",
+  "permissions": [
+    "activeTab",
+    "clipboardWrite",
+    "scripting",
+    "storage"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Page Scooper"
+  }
+}

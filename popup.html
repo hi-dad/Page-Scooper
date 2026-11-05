@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Page Scooper</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="mark" aria-hidden="true">◡</div>
+        <div>
+          <h1>Page Scooper</h1>
+          <p>Teach a page once. Scoop it anytime.</p>
+        </div>
+      </header>
+
+      <section class="train-card">
+        <div>
+          <span class="eyebrow">THIS SITE</span>
+          <strong id="site-status">Checking this page…</strong>
+        </div>
+        <button id="teach-button" class="primary">Choose what to scoop</button>
+        <button id="forget-button" class="text-button" hidden>Forget this site</button>
+      </section>
+
+      <section class="collection">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">COLLECTION</span>
+            <h2><span id="capture-count">0</span> scoops</h2>
+          </div>
+          <button id="clear-button" class="text-button" disabled>Clear</button>
+        </div>
+        <div id="capture-list" class="capture-list">
+          <div class="empty-state">Scooped pages will wait here until you copy them together.</div>
+        </div>
+        <button id="copy-button" class="copy-button" disabled>Copy everything</button>
+      </section>
+
+      <div id="message" class="message" role="status" aria-live="polite"></div>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
