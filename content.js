@@ -4,8 +4,10 @@
 
   const extensionHosts = new Set();
   let activePicker = null;
+  let activeStepRecorder = null;
   let activeMount = null;
   let stopRuleWatcher = null;
+  let openingRun = null;
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === "PING") {
@@ -15,6 +17,32 @@
 
     if (message?.type === "START_PICKER") {
       startPicker();
+      sendResponse({ ok: true });
+      return;
+    }
+
+    if (message?.type === "START_STEP_RECORDER") {
+      startStepRecorder(message.rule);
+      sendResponse({ ok: true });
+      return;
+    }
+
+    if (message?.type === "RUN_OPENING_STEPS") {
+      runOpeningSteps(message.rule, { announce: true });
+      sendResponse({ ok: true });
+      return;
+    }
+
+    if (message?.type === "RULE_UPDATED") {
+      watchSavedRule(message.rule);
+      sendResponse({ ok: true });
+      return;
+    }
+
+    if (message?.type === "RULE_REMOVED") {
+      stopRuleWatcher?.();
+      stopRuleWatcher = null;
+      activeMount?.destroy();
       sendResponse({ ok: true });
     }
   });
@@ -74,7 +102,8 @@
       const rule = {
         origin: location.origin,
         locator: buildLocator(target),
-        sampleText: normalizeText(target.innerText).slice(0, 160)
+        sampleText: normalizeText(target.innerText).slice(0, 160),
+        scope: PageScooperUtils.createPageScope("similar", location.href)
       };
 
       const response = await chrome.runtime.sendMessage({ type: "SAVE_RULE", rule });
@@ -128,6 +157,161 @@
     `;
     shadow.append(tip);
     return host;
+  }
+
+  function startStepRecorder(rule) {
+    if (!rule) return;
+    activePicker?.cancel();
+    activeStepRecorder?.cancel();
+
+    const steps = [];
+    const host = document.createElement("div");
+    host.dataset.pageScooper = "step-recorder";
+    Object.assign(host.style, {
+      position: "fixed",
+      left: "50%",
+      top: "16px",
+      transform: "translateX(-50%)",
+      zIndex: "2147483647"
+    });
+    const shadow = host.attachShadow({ mode: "closed" });
+    const panel = document.createElement("div");
+    panel.style.cssText = `
+      box-sizing: border-box; min-width: 420px; max-width: min(620px, calc(100vw - 32px));
+      padding: 13px 14px; border: 1px solid rgba(255,255,255,.16); border-radius: 16px;
+      background: #173d35; color: #fffaf0; box-shadow: 0 12px 38px rgba(0,0,0,.28);
+      font: 600 12px/1.35 system-ui, sans-serif;
+    `;
+    const title = document.createElement("strong");
+    title.textContent = "Record the clicks that reveal your content";
+    title.style.cssText = "display:block;font-size:13px;margin-bottom:2px";
+    const detail = document.createElement("span");
+    detail.textContent = "Start with the content closed. Click its controls in order, then choose Done.";
+    detail.style.cssText = "color:#c9d9d5;font-weight:500";
+    const status = document.createElement("div");
+    status.style.cssText = `
+      min-height: 18px; margin: 9px 0; padding: 7px 9px; border-radius: 9px;
+      background: rgba(255,255,255,.09); color: #eff6f3; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    `;
+    const controls = document.createElement("div");
+    controls.style.cssText = "display:flex;justify-content:flex-end;gap:7px";
+    const undo = recorderButton("Undo", true);
+    const cancelButton = recorderButton("Cancel", true);
+    const done = recorderButton("Done", false);
+    controls.append(undo, cancelButton, done);
+    panel.append(title, detail, status, controls);
+    shadow.append(panel);
+    document.documentElement.append(host);
+    extensionHosts.add(host);
+
+    const renderStatus = () => {
+      undo.disabled = !steps.length;
+      undo.style.opacity = steps.length ? "1" : ".45";
+      if (!steps.length) {
+        status.textContent = "No clicks recorded yet";
+        return;
+      }
+      status.textContent = steps.map((step, index) => `${index + 1}. ${step.label}`).join("  →  ");
+    };
+
+    const onPageClick = (event) => {
+      if (isExtensionElement(event.target)) return;
+      const clickable = findClickable(event.target);
+      if (!clickable) return;
+
+      const locator = buildLocator(clickable);
+      const previous = steps[steps.length - 1];
+      if (previous?.locator.selector === locator.selector) return;
+      steps.push({ locator, label: describeElement(clickable) });
+      flashRecordedElement(clickable);
+      renderStatus();
+    };
+
+    const cleanup = () => {
+      document.removeEventListener("click", onPageClick, true);
+      extensionHosts.delete(host);
+      host.remove();
+      activeStepRecorder = null;
+    };
+
+    const cancel = () => cleanup();
+    undo.addEventListener("click", () => {
+      steps.pop();
+      renderStatus();
+    });
+    cancelButton.addEventListener("click", cancel);
+    done.addEventListener("click", async () => {
+      if (!steps.length) {
+        status.textContent = "Click at least one page control, or choose Cancel.";
+        return;
+      }
+      done.disabled = true;
+      done.textContent = "Saving…";
+      const response = await chrome.runtime.sendMessage({
+        type: "SAVE_RULE",
+        rule: { ...rule, openerSteps: steps, autoOpen: rule.autoOpen || false }
+      });
+      cleanup();
+      if (!response?.ok) {
+        showToast(response?.error || "Those opening steps could not be saved.", "error");
+        return;
+      }
+      watchSavedRule(response.rule);
+      showToast(`${steps.length} ${steps.length === 1 ? "opening step" : "opening steps"} saved.`);
+    });
+
+    activeStepRecorder = { cancel };
+    document.addEventListener("click", onPageClick, true);
+    renderStatus();
+  }
+
+  function recorderButton(label, subtle) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = label;
+    button.style.cssText = `
+      border: ${subtle ? "1px solid rgba(255,255,255,.2)" : "0"}; border-radius: 9px;
+      padding: 7px 11px; color: ${subtle ? "#fffaf0" : "#173d35"};
+      background: ${subtle ? "transparent" : "#f6c667"}; font: 750 11px/1 system-ui, sans-serif;
+      cursor: pointer;
+    `;
+    return button;
+  }
+
+  function findClickable(element) {
+    if (!(element instanceof Element)) return null;
+    const semanticControl = element.closest([
+      "button", "a", "summary", "[role='button']", "[role='tab']",
+      "input[type='button']", "input[type='submit']", "[tabindex='0']"
+    ].join(","));
+    if (semanticControl) return semanticControl;
+
+    let candidate = element;
+    for (let depth = 0; candidate && depth < 4; depth += 1, candidate = candidate.parentElement) {
+      if (getComputedStyle(candidate).cursor === "pointer") return candidate;
+    }
+    return null;
+  }
+
+  function describeElement(element) {
+    const description = element.getAttribute("aria-label")
+      || element.getAttribute("title")
+      || element.innerText
+      || element.textContent
+      || element.tagName.toLowerCase();
+    return normalizeText(description).replace(/\n/g, " ").slice(0, 48) || "Page control";
+  }
+
+  function flashRecordedElement(element) {
+    const previousOutline = element.style.outline;
+    const previousOffset = element.style.outlineOffset;
+    element.style.outline = "3px solid #f5a623";
+    element.style.outlineOffset = "3px";
+    setTimeout(() => {
+      element.style.outline = previousOutline;
+      element.style.outlineOffset = previousOffset;
+    }, 650);
   }
 
   function mountScoopButton(target, rule) {
@@ -239,6 +423,7 @@
     stopRuleWatcher?.();
 
     let lastUrl = location.href;
+    let attemptedAutoOpenUrl = null;
     let refreshTimer = null;
     let stopped = false;
 
@@ -249,9 +434,22 @@
       const urlChanged = location.href !== lastUrl;
       if (urlChanged) lastUrl = location.href;
 
-      const target = resolveLocator(rule.locator);
+      if (!matchesRuleScope(rule)) {
+        activeMount?.destroy();
+        return;
+      }
+
+      const target = resolveVisibleLocator(rule.locator);
       if (!target) {
         activeMount?.destroy();
+        if (
+          rule.autoOpen
+          && rule.openerSteps?.length
+          && attemptedAutoOpenUrl !== location.href
+        ) {
+          attemptedAutoOpenUrl = location.href;
+          runOpeningSteps(rule).finally(scheduleRefresh);
+        }
         return;
       }
 
@@ -269,7 +467,12 @@
     };
 
     const observer = new MutationObserver(scheduleRefresh);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["class", "style", "hidden", "aria-hidden"]
+    });
     const urlTimer = setInterval(() => {
       if (location.href !== lastUrl) scheduleRefresh();
     }, 500);
@@ -283,6 +486,84 @@
     };
 
     refresh();
+  }
+
+  function runOpeningSteps(rule, { announce = false } = {}) {
+    if (!rule?.openerSteps?.length) {
+      if (announce) showToast("No opening steps are configured for this site.", "error");
+      return Promise.resolve(false);
+    }
+    if (openingRun) return openingRun;
+
+    openingRun = (async () => {
+      try {
+        if (resolveVisibleLocator(rule.locator)) return true;
+
+        let index = 0;
+        while (index < rule.openerSteps.length) {
+          if (resolveVisibleLocator(rule.locator)) break;
+
+          // If a later control is already visible, skip earlier toggle steps.
+          let selectedIndex = index;
+          for (let later = rule.openerSteps.length - 1; later > index; later -= 1) {
+            if (resolveVisibleLocator(rule.openerSteps[later].locator)) {
+              selectedIndex = later;
+              break;
+            }
+          }
+
+          const step = rule.openerSteps[selectedIndex];
+          const control = await waitForLocator(step.locator, 6500);
+          if (!control) throw new Error(`Could not find “${step.label}”.`);
+          control.click();
+          index = selectedIndex + 1;
+          await delay(350);
+        }
+
+        const target = resolveVisibleLocator(rule.locator) || await waitForLocator(rule.locator, 8000);
+        if (!target) throw new Error("The saved content did not appear after running the opening steps.");
+        if (announce) showToast("Saved content opened.");
+        return true;
+      } catch (error) {
+        if (announce) showToast(error.message || "The opening steps could not finish.", "error");
+        return false;
+      } finally {
+        openingRun = null;
+      }
+    })();
+
+    return openingRun;
+  }
+
+  async function waitForLocator(locator, timeoutMs) {
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < timeoutMs) {
+      const element = resolveVisibleLocator(locator);
+      if (element) return element;
+      await delay(150);
+    }
+    return null;
+  }
+
+  function delay(milliseconds) {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  }
+
+  function resolveVisibleLocator(locator) {
+    const element = resolveLocator(locator);
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return rect.width > 0
+      && rect.height > 0
+      && style.display !== "none"
+      && style.visibility !== "hidden"
+      ? element
+      : null;
+  }
+
+  function matchesRuleScope(rule) {
+    return PageScooperUtils.matchesPageScope(rule.origin, rule.scope, location.href);
   }
 
   function buildLocator(element) {

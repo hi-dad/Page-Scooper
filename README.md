@@ -22,9 +22,18 @@ Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on
 - Combined plain-text copy with page titles and URLs
 - Transcript timestamp ranges when the captured text contains recognizable timestamps
 - Rebinding on single-page-app navigation, including sites that switch videos without reloading
+- Optional clean-copy mode that removes transcript timestamps without discarding the original capture
+- Recorded multi-step opening workflows, with manual replay or automatic opening
+- Exact-page, similar-page, and entire-site recipe scopes
 - No analytics, server, account, or uploaded page content
 
 The current capture method reads visible rendered text. Pages that virtualize long transcripts may expose only the currently rendered portion; an auto-scroll collector is planned for a later iteration.
+
+## Opening steps
+
+If content is hidden behind controls such as **Description → Show transcript**, open a page where the content is still closed and choose **Record steps** in Page Scooper. Click each page control in order, then choose **Done** in the floating recorder. You can replay the workflow with **Run now** or enable **Open automatically** for matching pages.
+
+Synthetic clicks work with ordinary page controls. Sites may still require manual interaction when controls live in inaccessible cross-origin frames or explicitly reject scripted clicks.
 
 ## Project structure
 

@@ -1,6 +1,11 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { extractTimestampRange } = require("../utils.js");
+const {
+  createPageScope,
+  extractTimestampRange,
+  matchesPageScope,
+  removeTranscriptTimestamps
+} = require("../utils.js");
 
 test("finds a transcript range from timestamps at the start of lines", () => {
   const transcript = `
@@ -35,4 +40,40 @@ test("falls back to timestamps in flattened transcript text", () => {
 test("returns null when no credible range exists", () => {
   assert.equal(extractTimestampRange("A page with no transcript timestamps."), null);
   assert.equal(extractTimestampRange("Only one time: 2:15"), null);
+});
+
+test("removes only timestamps at the beginning of transcript rows", () => {
+  const transcript = `0:03 - Welcome to class.
+[0:15] We will meet at 12:30 tomorrow.
+(1:04:09) — Closing remarks.`;
+
+  assert.equal(
+    removeTranscriptTimestamps(transcript),
+    "Welcome to class.\nWe will meet at 12:30 tomorrow.\nClosing remarks."
+  );
+});
+
+test("keeps useful spacing when timestamps occupy their own rows", () => {
+  assert.equal(
+    removeTranscriptTimestamps("0:00\nFirst paragraph\n0:10\nSecond paragraph"),
+    "First paragraph\n\nSecond paragraph"
+  );
+});
+
+test("creates a reusable scope for video and course pages", () => {
+  assert.deepEqual(
+    createPageScope("similar", "https://www.youtube.com/watch?v=abc"),
+    { type: "path", value: "/watch" }
+  );
+  assert.deepEqual(
+    createPageScope("similar", "https://school.example/courses/42/pages/lecture-one"),
+    { type: "path-prefix", value: "/courses/42/pages/" }
+  );
+});
+
+test("matches similar pages without matching unrelated site areas", () => {
+  const scope = createPageScope("similar", "https://www.youtube.com/watch?v=abc");
+  assert.equal(matchesPageScope("https://www.youtube.com", scope, "https://www.youtube.com/watch?v=xyz"), true);
+  assert.equal(matchesPageScope("https://www.youtube.com", scope, "https://www.youtube.com/"), false);
+  assert.equal(matchesPageScope("https://www.youtube.com", scope, "https://example.com/watch?v=xyz"), false);
 });

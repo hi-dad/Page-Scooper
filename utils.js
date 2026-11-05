@@ -44,7 +44,53 @@
     return null;
   }
 
-  const api = Object.freeze({ extractTimestampRange });
+  function removeTranscriptTimestamps(value) {
+    return String(value || "")
+      .split(/\r?\n/)
+      .map((line) => line.replace(
+        /^\s*[\[(]?\s*(?:\d{1,2}:)?\d{1,3}:\d{2}\s*[\])]?\s*(?:[-–—]\s*)?/,
+        ""
+      ))
+      .join("\n")
+      .replace(/^\n+|\n+$/g, "")
+      .replace(/\n{3,}/g, "\n\n");
+  }
+
+  function createPageScope(type, value) {
+    const url = value instanceof URL ? value : new URL(value);
+    if (type === "origin") return { type: "origin" };
+    if (type === "exact") {
+      return { type: "exact", value: `${url.origin}${url.pathname}${url.search}` };
+    }
+
+    const segments = url.pathname.split("/").filter(Boolean);
+    if (segments.length <= 1) {
+      return { type: "path", value: url.pathname || "/" };
+    }
+    return {
+      type: "path-prefix",
+      value: `/${segments.slice(0, -1).join("/")}/`
+    };
+  }
+
+  function matchesPageScope(ruleOrigin, scope, value) {
+    const url = value instanceof URL ? value : new URL(value);
+    if (ruleOrigin !== url.origin) return false;
+    if (!scope || scope.type === "origin") return true;
+    if (scope.type === "exact") {
+      return `${url.origin}${url.pathname}${url.search}` === scope.value;
+    }
+    if (scope.type === "path") return url.pathname === scope.value;
+    if (scope.type === "path-prefix") return url.pathname.startsWith(scope.value);
+    return true;
+  }
+
+  const api = Object.freeze({
+    createPageScope,
+    extractTimestampRange,
+    matchesPageScope,
+    removeTranscriptTimestamps
+  });
   globalObject.PageScooperUtils = api;
 
   if (typeof module !== "undefined" && module.exports) {

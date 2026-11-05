@@ -102,13 +102,17 @@ async function removeCapture(id) {
 }
 
 async function getState(origin) {
-  const [{ rules = [] }, { captures = [] }] = await Promise.all([
-    chrome.storage.local.get("rules"),
+  const [{ rules = [], settings = {} }, { captures = [] }] = await Promise.all([
+    chrome.storage.local.get(["rules", "settings"]),
     chrome.storage.session.get("captures")
   ]);
   return {
     captures,
-    rule: rules.find((item) => item.origin === origin) || null
+    rule: rules.find((item) => item.origin === origin) || null,
+    settings: {
+      includeTimestamps: false,
+      ...settings
+    }
   };
 }
 

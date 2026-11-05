@@ -22,6 +22,32 @@
           <strong id="site-status">Checking this page…</strong>
         </div>
         <button id="teach-button" class="primary">Choose what to scoop</button>
+        <div id="rule-settings" class="rule-settings" hidden>
+          <label class="setting-row" for="scope-select">
+            <span>Use this recipe on</span>
+            <select id="scope-select">
+              <option value="similar">Similar pages</option>
+              <option value="exact">Only this page</option>
+              <option value="origin">Entire website</option>
+            </select>
+          </label>
+
+          <div class="workflow-setting">
+            <div class="workflow-heading">
+              <span>Opening steps</span>
+              <small id="steps-status">Not configured</small>
+            </div>
+            <div class="button-row">
+              <button id="record-steps-button" class="secondary" title="Start on a page where the saved content is closed">Record steps</button>
+              <button id="run-steps-button" class="secondary" hidden>Run now</button>
+              <button id="clear-steps-button" class="icon-button" title="Clear opening steps" hidden>×</button>
+            </div>
+            <label class="toggle-row">
+              <input id="auto-open-toggle" type="checkbox" disabled>
+              <span>Open automatically</span>
+            </label>
+          </div>
+        </div>
         <button id="forget-button" class="text-button" hidden>Forget this site</button>
       </section>
 
@@ -33,6 +59,10 @@
           </div>
           <button id="clear-button" class="text-button" disabled>Clear</button>
         </div>
+        <label class="copy-option">
+          <input id="timestamps-toggle" type="checkbox">
+          <span>Include timestamps when copying</span>
+        </label>
         <div id="capture-list" class="capture-list">
           <div class="empty-state">Scooped pages will wait here until you copy them together.</div>
         </div>
