@@ -128,7 +128,7 @@ async function syncRegisteredContentScript() {
     {
       id: CONTENT_SCRIPT_ID,
       matches,
-      js: ["content.js"],
+      js: ["utils.js", "content.js"],
       runAt: "document_idle",
       persistAcrossSessions: true
     }

@@ -4,6 +4,8 @@
 
   const extensionHosts = new Set();
   let activePicker = null;
+  let activeMount = null;
+  let stopRuleWatcher = null;
 
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message?.type === "PING") {
@@ -17,15 +19,13 @@
     }
   });
 
-  initializeSavedButton();
+  initializeSavedRule();
 
-  async function initializeSavedButton() {
+  async function initializeSavedRule() {
     const { rules = [] } = await chrome.storage.local.get("rules");
     const rule = rules.find((item) => item.origin === location.origin);
     if (!rule) return;
-
-    const target = resolveLocator(rule.locator);
-    if (target) mountScoopButton(target, rule);
+    watchSavedRule(rule);
   }
 
   function startPicker() {
@@ -83,7 +83,7 @@
         return;
       }
 
-      mountScoopButton(target, response.rule);
+      watchSavedRule(response.rule);
       showToast("Saved. Page Scooper will remember this region.");
     };
 
@@ -131,12 +131,12 @@
   }
 
   function mountScoopButton(target, rule) {
-    document.querySelectorAll('[data-page-scooper="button"]').forEach((node) => node.remove());
+    activeMount?.destroy();
 
     const host = document.createElement("div");
     host.dataset.pageScooper = "button";
     Object.assign(host.style, {
-      position: "absolute",
+      position: "fixed",
       zIndex: "2147483645"
     });
     const shadow = host.attachShadow({ mode: "closed" });
@@ -154,6 +154,10 @@
     button.addEventListener("click", async (event) => {
       event.preventDefault();
       event.stopPropagation();
+      if (!target.isConnected) {
+        showToast("This page changed. Open the transcript and try again.", "error");
+        return;
+      }
       const content = normalizeText(target.innerText);
       if (!content) {
         showToast("This region does not contain visible text.", "error");
@@ -164,12 +168,20 @@
       button.textContent = "Scooping…";
       const response = await chrome.runtime.sendMessage({
         type: "ADD_CAPTURE",
-        capture: { title: document.title, url: location.href, content, ruleId: rule.id }
+        capture: {
+          title: document.title,
+          url: location.href,
+          content,
+          ruleId: rule.id,
+          timestampRange: globalThis.PageScooperUtils?.extractTimestampRange(content) || null
+        }
       });
 
       if (response?.ok) {
-        button.textContent = `Scooped · ${response.count} saved`;
+        button.textContent = "Added to collection ✓";
         button.style.background = "#dff3df";
+        showToast(`${response.count} ${response.count === 1 ? "scoop" : "scoops"} in your collection.`);
+        resetTimer = setTimeout(reset, 1800);
       } else {
         button.textContent = "Try again";
         showToast(response?.error || "That content could not be added.", "error");
@@ -180,17 +192,97 @@
     document.documentElement.append(host);
     extensionHosts.add(host);
 
+    let resetTimer = null;
+
     const position = () => {
       if (!target.isConnected || !host.isConnected) return;
       const rect = target.getBoundingClientRect();
-      host.style.left = `${Math.max(8, window.scrollX + rect.right - host.offsetWidth)}px`;
-      host.style.top = `${Math.max(8, window.scrollY + rect.top - 38)}px`;
+      const width = host.getBoundingClientRect().width;
+      const left = Math.min(
+        window.innerWidth - width - 8,
+        Math.max(8, rect.right - width - 12)
+      );
+      host.style.left = `${left}px`;
+      host.style.top = `${Math.max(8, rect.top + 12)}px`;
+      host.style.display = rect.width > 0 && rect.height > 0 ? "block" : "none";
     };
 
-    position();
+    const resizeObserver = new ResizeObserver(position);
+
+    const reset = () => {
+      clearTimeout(resetTimer);
+      resetTimer = null;
+      button.textContent = "Scoop this page";
+      button.style.background = "#fff8e8";
+    };
+
+    const destroy = () => {
+      clearTimeout(resetTimer);
+      resizeObserver.disconnect();
+      window.removeEventListener("resize", position);
+      window.removeEventListener("scroll", position, true);
+      extensionHosts.delete(host);
+      host.remove();
+      if (activeMount?.host === host) activeMount = null;
+    };
+
+    requestAnimationFrame(position);
     window.addEventListener("resize", position, { passive: true });
-    window.addEventListener("scroll", position, { passive: true });
-    new ResizeObserver(position).observe(target);
+    window.addEventListener("scroll", position, { passive: true, capture: true });
+    resizeObserver.observe(target);
+
+    activeMount = { host, target, destroy, reset };
+    return activeMount;
+  }
+
+  function watchSavedRule(rule) {
+    stopRuleWatcher?.();
+
+    let lastUrl = location.href;
+    let refreshTimer = null;
+    let stopped = false;
+
+    const refresh = () => {
+      refreshTimer = null;
+      if (stopped) return;
+
+      const urlChanged = location.href !== lastUrl;
+      if (urlChanged) lastUrl = location.href;
+
+      const target = resolveLocator(rule.locator);
+      if (!target) {
+        activeMount?.destroy();
+        return;
+      }
+
+      if (activeMount?.target === target && target.isConnected) {
+        if (urlChanged) activeMount.reset();
+        return;
+      }
+
+      mountScoopButton(target, rule);
+    };
+
+    const scheduleRefresh = () => {
+      if (refreshTimer || stopped) return;
+      refreshTimer = setTimeout(refresh, 120);
+    };
+
+    const observer = new MutationObserver(scheduleRefresh);
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    const urlTimer = setInterval(() => {
+      if (location.href !== lastUrl) scheduleRefresh();
+    }, 500);
+
+    stopRuleWatcher = () => {
+      stopped = true;
+      clearTimeout(refreshTimer);
+      clearInterval(urlTimer);
+      observer.disconnect();
+      activeMount?.destroy();
+    };
+
+    refresh();
   }
 
   function buildLocator(element) {

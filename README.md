@@ -20,6 +20,8 @@ Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on
 - Local-only recipe storage
 - Session-only capture collection
 - Combined plain-text copy with page titles and URLs
+- Transcript timestamp ranges when the captured text contains recognizable timestamps
+- Rebinding on single-page-app navigation, including sites that switch videos without reloading
 - No analytics, server, account, or uploaded page content
 
 The current capture method reads visible rendered text. Pages that virtualize long transcripts may expose only the currently rendered portion; an auto-scroll collector is planned for a later iteration.

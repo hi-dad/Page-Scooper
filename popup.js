@@ -4,6 +4,7 @@ const clearButton = document.querySelector("#clear-button");
 const copyButton = document.querySelector("#copy-button");
 const siteStatus = document.querySelector("#site-status");
 const captureCount = document.querySelector("#capture-count");
+const captureLabel = document.querySelector("#capture-label");
 const captureList = document.querySelector("#capture-list");
 const message = document.querySelector("#message");
 
@@ -100,6 +101,7 @@ function render() {
 
   const captures = state.captures || [];
   captureCount.textContent = captures.length;
+  captureLabel.textContent = pluralize(captures.length, "scoop");
   clearButton.disabled = !captures.length;
   copyButton.disabled = !captures.length;
 
@@ -118,7 +120,12 @@ function render() {
 
     const meta = document.createElement("div");
     meta.className = "capture-meta";
-    meta.textContent = `${wordCount(capture.content).toLocaleString()} words`;
+    const timestampRange = capture.timestampRange || PageScooperUtils.extractTimestampRange(capture.content);
+    meta.textContent = [
+      `${wordCount(capture.content).toLocaleString()} words`,
+      timestampRange ? `${timestampRange.start}–${timestampRange.end}` : null
+    ].filter(Boolean).join(" · ");
+    if (timestampRange) meta.title = "Timestamp range found in the captured text";
 
     const remove = document.createElement("button");
     remove.className = "remove-capture";
@@ -136,7 +143,7 @@ async function ensureContentScript(tabId) {
   try {
     await chrome.tabs.sendMessage(tabId, { type: "PING" });
   } catch {
-    await chrome.scripting.executeScript({ target: { tabId }, files: ["content.js"] });
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["utils.js", "content.js"] });
   }
 }
 
