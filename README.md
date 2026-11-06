@@ -31,7 +31,9 @@ The current capture method reads visible rendered text. Pages that virtualize lo
 
 ## Opening steps
 
-If content is hidden behind controls such as **Description → Show transcript**, open a page where the content is still closed and choose **Record steps** in Page Scooper. Click each page control in order, then choose **Done** in the floating recorder. You can replay the workflow with **Run now** or enable **Open automatically** for matching pages.
+If content is hidden behind controls such as **Description → Show transcript**, open a page where the content is still closed and choose **Record steps** in Page Scooper. Click each page control in order, then choose **Done** in the floating recorder. You can replay the workflow with **Run now** or enable **Run automatically** for matching pages.
+
+Page Scooper fingerprints controls using stable IDs, accessibility labels, classes, and page structure—not their displayed text. A video-specific title can therefore work when the same structural element exists on other videos, although choosing a consistent control is still the most reliable approach.
 
 Synthetic clicks work with ordinary page controls. Sites may still require manual interaction when controls live in inaccessible cross-origin frames or explicitly reject scripted clicks.
 

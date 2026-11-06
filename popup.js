@@ -15,6 +15,7 @@ const runStepsButton = document.querySelector("#run-steps-button");
 const clearStepsButton = document.querySelector("#clear-steps-button");
 const autoOpenToggle = document.querySelector("#auto-open-toggle");
 const timestampsToggle = document.querySelector("#timestamps-toggle");
+const scopeHint = document.querySelector("#scope-hint");
 
 let activeTab;
 let activeOrigin;
@@ -101,7 +102,7 @@ autoOpenToggle.addEventListener("change", async () => {
   const patch = { autoOpen: autoOpenToggle.checked };
   if (!state.rule.scope) patch.scope = PageScooperUtils.createPageScope("similar", activeTab.url);
   await saveRulePatch(patch);
-  setMessage(autoOpenToggle.checked ? "Automatic opening enabled." : "Automatic opening disabled.");
+  setMessage(autoOpenToggle.checked ? "Automatic running enabled." : "Automatic running disabled.");
 });
 
 timestampsToggle.addEventListener("change", async () => {
@@ -178,7 +179,9 @@ function render() {
       ? "exact"
       : state.rule.scope?.type === "origin"
         ? "origin"
-        : "similar";
+        : state.rule.scope
+          ? "similar"
+          : "origin";
     stepsStatus.textContent = stepCount
       ? `${stepCount} ${pluralize(stepCount, "step")} saved`
       : "Not configured";
@@ -187,6 +190,7 @@ function render() {
     clearStepsButton.hidden = !stepCount;
     autoOpenToggle.disabled = !stepCount;
     autoOpenToggle.checked = Boolean(stepCount && state.rule.autoOpen);
+    scopeHint.textContent = describeScope(state.rule.scope, activeTab.url);
   }
 
   timestampsToggle.checked = Boolean(state.settings.includeTimestamps);
@@ -269,6 +273,17 @@ async function saveRulePatch(patch) {
   chrome.tabs.sendMessage(activeTab.id, { type: "RULE_UPDATED", rule: state.rule }).catch(() => {});
   render();
   return state.rule;
+}
+
+function describeScope(scope, pageUrl) {
+  const url = new URL(pageUrl);
+  if (scope?.type === "exact") return "Runs only for this exact URL.";
+  if (!scope || scope.type === "origin") return `Runs anywhere on ${url.hostname}.`;
+
+  if (scope.type === "path-prefix") {
+    return `Runs on ${url.hostname}${scope.value}…`;
+  }
+  return `Runs on ${url.hostname}${scope.value || url.pathname}.`;
 }
 
 function toOriginPattern(origin) {

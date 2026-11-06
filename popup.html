@@ -24,13 +24,14 @@
         <button id="teach-button" class="primary">Choose what to scoop</button>
         <div id="rule-settings" class="rule-settings" hidden>
           <label class="setting-row" for="scope-select">
-            <span>Use this recipe on</span>
+            <span>Run this recipe on</span>
             <select id="scope-select">
-              <option value="similar">Similar pages</option>
+              <option value="similar">Similar pages · recommended</option>
               <option value="exact">Only this page</option>
               <option value="origin">Entire website</option>
             </select>
           </label>
+          <p id="scope-hint" class="setting-hint"></p>
 
           <div class="workflow-setting">
             <div class="workflow-heading">
@@ -44,8 +45,9 @@
             </div>
             <label class="toggle-row">
               <input id="auto-open-toggle" type="checkbox" disabled>
-              <span>Open automatically</span>
+              <span>Run automatically</span>
             </label>
+            <p class="setting-hint">Choose controls that exist on matching pages. Their displayed text can change.</p>
           </div>
         </div>
         <button id="forget-button" class="text-button" hidden>Forget this site</button>

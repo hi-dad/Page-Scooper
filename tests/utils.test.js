@@ -60,6 +60,27 @@ test("keeps useful spacing when timestamps occupy their own rows", () => {
   );
 });
 
+test("removes duplicate spoken accessibility timestamps", () => {
+  const transcript = `0:16
+16 seconds
+First line.
+1:08
+1 minute, 8 seconds
+Second line.`;
+
+  assert.equal(
+    removeTranscriptTimestamps(transcript),
+    "First line.\n\nSecond line."
+  );
+});
+
+test("does not remove spoken duration text that does not match the timestamp", () => {
+  assert.equal(
+    removeTranscriptTimestamps("0:16\nTen seconds is not enough."),
+    "Ten seconds is not enough."
+  );
+});
+
 test("creates a reusable scope for video and course pages", () => {
   assert.deepEqual(
     createPageScope("similar", "https://www.youtube.com/watch?v=abc"),

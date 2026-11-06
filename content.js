@@ -186,7 +186,7 @@
     title.textContent = "Record the clicks that reveal your content";
     title.style.cssText = "display:block;font-size:13px;margin-bottom:2px";
     const detail = document.createElement("span");
-    detail.textContent = "Start with the content closed. Click its controls in order, then choose Done.";
+    detail.textContent = "Start with it closed. Click reusable controls in order; their text may change between pages.";
     detail.style.cssText = "color:#c9d9d5;font-weight:500";
     const status = document.createElement("div");
     status.style.cssText = `

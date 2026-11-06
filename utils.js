@@ -45,15 +45,68 @@
   }
 
   function removeTranscriptTimestamps(value) {
-    return String(value || "")
-      .split(/\r?\n/)
-      .map((line) => line.replace(
-        /^\s*[\[(]?\s*(?:\d{1,2}:)?\d{1,3}:\d{2}\s*[\])]?\s*(?:[-–—]\s*)?/,
-        ""
-      ))
+    const cleanedLines = [];
+    let pendingTimestampSeconds = null;
+
+    for (const line of String(value || "").split(/\r?\n/)) {
+      const timestampMatch = line.match(
+        /^\s*[\[(]?\s*((?:\d{1,2}:)?\d{1,3}:\d{2})\s*[\])]?\s*(?:[-–—]\s*)?/
+      );
+
+      if (timestampMatch) {
+        const timestamp = toTimestamp(timestampMatch[1]);
+        const remainder = line.slice(timestampMatch[0].length);
+        pendingTimestampSeconds = timestamp?.seconds ?? null;
+
+        if (
+          pendingTimestampSeconds !== null
+          && parseSpokenDuration(remainder) === pendingTimestampSeconds
+        ) {
+          cleanedLines.push("");
+          pendingTimestampSeconds = null;
+        } else {
+          cleanedLines.push(remainder);
+          if (remainder.trim()) pendingTimestampSeconds = null;
+        }
+        continue;
+      }
+
+      if (
+        pendingTimestampSeconds !== null
+        && parseSpokenDuration(line) === pendingTimestampSeconds
+      ) {
+        pendingTimestampSeconds = null;
+        continue;
+      }
+
+      if (line.trim()) pendingTimestampSeconds = null;
+      cleanedLines.push(line);
+    }
+
+    return cleanedLines
       .join("\n")
       .replace(/^\n+|\n+$/g, "")
       .replace(/\n{3,}/g, "\n\n");
+  }
+
+  function parseSpokenDuration(value) {
+    const text = String(value || "").trim().toLowerCase();
+    if (!text) return null;
+
+    let totalSeconds = 0;
+    let matchCount = 0;
+    const unitPattern = /(\d+)\s*(hours?|minutes?|seconds?)/g;
+    for (const match of text.matchAll(unitPattern)) {
+      const amount = Number(match[1]);
+      const unit = match[2];
+      if (unit.startsWith("hour")) totalSeconds += amount * 3600;
+      if (unit.startsWith("minute")) totalSeconds += amount * 60;
+      if (unit.startsWith("second")) totalSeconds += amount;
+      matchCount += 1;
+    }
+
+    const leftover = text.replace(unitPattern, "").replace(/[\s,&]+/g, "");
+    return matchCount && !leftover ? totalSeconds : null;
   }
 
   function createPageScope(type, value) {

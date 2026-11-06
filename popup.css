@@ -103,13 +103,21 @@ button { font: inherit; }
 }
 
 .setting-row select {
-  max-width: 150px;
+  max-width: 185px;
   border: 1px solid rgba(23, 61, 53, .18);
   border-radius: 8px;
   padding: 6px 8px;
   color: #173d35;
   background: #fffdf6;
   font: 650 11px/1 system-ui, sans-serif;
+}
+
+.setting-hint {
+  margin: 6px 0 0;
+  color: #7c8a85;
+  font-size: 9px;
+  font-weight: 550;
+  line-height: 1.35;
 }
 
 .workflow-setting { margin-top: 12px; }
