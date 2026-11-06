@@ -56,4 +56,4 @@ Run the complete validation suite with:
 npm run check
 ```
 
-The sticky-button matrix tests top, middle, bottom, initially offset, nested, and horizontal scroll positions. GitHub Actions runs the same validation on every push and pull request, so changes cannot merge with a failing button-visibility invariant.
+The sticky-button matrix tests top, middle, bottom, initially offset, nested, and horizontal scroll positions. GitHub Actions runs the same validation on every push and pull request so a failing button-visibility invariant is reported before merge. Enable branch protection if you also want GitHub to block merging when that check fails.
