@@ -1,6 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
+  calculateStickyPosition,
   createPageScope,
   extractTimestampRange,
   matchesPageScope,
@@ -97,4 +98,42 @@ test("matches similar pages without matching unrelated site areas", () => {
   assert.equal(matchesPageScope("https://www.youtube.com", scope, "https://www.youtube.com/watch?v=xyz"), true);
   assert.equal(matchesPageScope("https://www.youtube.com", scope, "https://www.youtube.com/"), false);
   assert.equal(matchesPageScope("https://www.youtube.com", scope, "https://example.com/watch?v=xyz"), false);
+});
+
+test("anchors a button to the visible portion of a scrolled transcript", () => {
+  const viewport = { top: 0, right: 1200, bottom: 800, left: 0 };
+  const clip = { top: 300, right: 1000, bottom: 760, left: 100 };
+  const button = { width: 180, height: 40 };
+
+  assert.deepEqual(
+    calculateStickyPosition(
+      { top: -500, right: 980, bottom: 1500, left: 120 },
+      [clip],
+      viewport,
+      button
+    ),
+    { left: 788, top: 312 }
+  );
+
+  assert.deepEqual(
+    calculateStickyPosition(
+      { top: -900, right: 980, bottom: 1100, left: 120 },
+      [clip],
+      viewport,
+      button
+    ),
+    { left: 788, top: 312 }
+  );
+});
+
+test("hides a sticky button when its selected content is fully clipped", () => {
+  assert.equal(
+    calculateStickyPosition(
+      { top: -500, right: 500, bottom: -100, left: 100 },
+      [],
+      { top: 0, right: 1200, bottom: 800, left: 0 },
+      { width: 180, height: 40 }
+    ),
+    null
+  );
 });

@@ -277,13 +277,15 @@ async function saveRulePatch(patch) {
 
 function describeScope(scope, pageUrl) {
   const url = new URL(pageUrl);
-  if (scope?.type === "exact") return "Runs only for this exact URL.";
-  if (!scope || scope.type === "origin") return `Runs anywhere on ${url.hostname}.`;
+  if (scope?.type === "exact") return "Looks for the same saved element only at this exact URL.";
+  if (!scope || scope.type === "origin") {
+    return `Looks for the same saved element on every page at ${url.hostname}.`;
+  }
 
   if (scope.type === "path-prefix") {
-    return `Runs on ${url.hostname}${scope.value}…`;
+    return `Looks for the same saved element on ${url.hostname}${scope.value}…`;
   }
-  return `Runs on ${url.hostname}${scope.value || url.pathname}.`;
+  return `Looks for the same saved element on ${url.hostname}${scope.value || url.pathname}.`;
 }
 
 function toOriginPattern(origin) {

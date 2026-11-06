@@ -25,6 +25,7 @@ Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on
 - Optional clean-copy mode that removes transcript timestamps without discarding the original capture
 - Recorded multi-step opening workflows, with manual replay or automatic opening
 - Exact-page, similar-page, and entire-site recipe scopes
+- A Scoop button that stays anchored to the visible part of nested, scrollable content
 - No analytics, server, account, or uploaded page content
 
 The current capture method reads visible rendered text. Pages that virtualize long transcripts may expose only the currently rendered portion; an auto-scroll collector is planned for a later iteration.

@@ -377,18 +377,29 @@
     extensionHosts.add(host);
 
     let resetTimer = null;
+    const clippingAncestors = getClippingAncestors(target);
+    const scrollTargets = new Set([window, document, ...clippingAncestors]);
 
     const position = () => {
       if (!target.isConnected || !host.isConnected) return;
       const rect = target.getBoundingClientRect();
-      const width = host.getBoundingClientRect().width;
-      const left = Math.min(
-        window.innerWidth - width - 8,
-        Math.max(8, rect.right - width - 12)
+      host.style.display = "block";
+      host.style.visibility = "hidden";
+      const buttonRect = host.getBoundingClientRect();
+      const placement = PageScooperUtils.calculateStickyPosition(
+        rect,
+        clippingAncestors.map((element) => element.getBoundingClientRect()),
+        { top: 0, right: window.innerWidth, bottom: window.innerHeight, left: 0 },
+        { width: buttonRect.width, height: buttonRect.height }
       );
-      host.style.left = `${left}px`;
-      host.style.top = `${Math.max(8, rect.top + 12)}px`;
-      host.style.display = rect.width > 0 && rect.height > 0 ? "block" : "none";
+      if (!placement) {
+        host.style.display = "none";
+        host.style.visibility = "";
+        return;
+      }
+      host.style.left = `${placement.left}px`;
+      host.style.top = `${placement.top}px`;
+      host.style.visibility = "";
     };
 
     const resizeObserver = new ResizeObserver(position);
@@ -404,7 +415,7 @@
       clearTimeout(resetTimer);
       resizeObserver.disconnect();
       window.removeEventListener("resize", position);
-      window.removeEventListener("scroll", position, true);
+      scrollTargets.forEach((element) => element.removeEventListener("scroll", position, true));
       extensionHosts.delete(host);
       host.remove();
       if (activeMount?.host === host) activeMount = null;
@@ -412,10 +423,13 @@
 
     requestAnimationFrame(position);
     window.addEventListener("resize", position, { passive: true });
-    window.addEventListener("scroll", position, { passive: true, capture: true });
+    scrollTargets.forEach((element) => {
+      element.addEventListener("scroll", position, { passive: true, capture: true });
+    });
     resizeObserver.observe(target);
+    clippingAncestors.forEach((element) => resizeObserver.observe(element));
 
-    activeMount = { host, target, destroy, reset };
+    activeMount = { host, target, destroy, position, reset };
     return activeMount;
   }
 
@@ -454,6 +468,7 @@
       }
 
       if (activeMount?.target === target && target.isConnected) {
+        activeMount.position();
         if (urlChanged) activeMount.reset();
         return;
       }
@@ -560,6 +575,19 @@
       && style.visibility !== "hidden"
       ? element
       : null;
+  }
+
+  function getClippingAncestors(element) {
+    const ancestors = [];
+    let parent = element.parentElement;
+    while (parent && parent !== document.documentElement) {
+      const style = getComputedStyle(parent);
+      const clipsX = /(auto|scroll|hidden|clip)/.test(style.overflowX);
+      const clipsY = /(auto|scroll|hidden|clip)/.test(style.overflowY);
+      if (clipsX || clipsY) ancestors.push(parent);
+      parent = parent.parentElement;
+    }
+    return ancestors;
   }
 
   function matchesRuleScope(rule) {

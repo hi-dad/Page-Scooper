@@ -138,7 +138,44 @@
     return true;
   }
 
+  function calculateStickyPosition(targetRect, clipRects, viewportRect, buttonSize, gap = 12) {
+    const bounds = {
+      top: targetRect.top,
+      right: targetRect.right,
+      bottom: targetRect.bottom,
+      left: targetRect.left
+    };
+
+    for (const clip of [viewportRect, ...clipRects]) {
+      bounds.top = Math.max(bounds.top, clip.top);
+      bounds.right = Math.min(bounds.right, clip.right);
+      bounds.bottom = Math.min(bounds.bottom, clip.bottom);
+      bounds.left = Math.max(bounds.left, clip.left);
+    }
+
+    if (bounds.right <= bounds.left || bounds.bottom <= bounds.top) return null;
+
+    const viewportGap = 8;
+    return {
+      left: Math.max(
+        viewportRect.left + viewportGap,
+        Math.min(
+          bounds.right - buttonSize.width - gap,
+          viewportRect.right - buttonSize.width - viewportGap
+        )
+      ),
+      top: Math.max(
+        viewportRect.top + viewportGap,
+        Math.min(
+          bounds.top + gap,
+          viewportRect.bottom - buttonSize.height - viewportGap
+        )
+      )
+    };
+  }
+
   const api = Object.freeze({
+    calculateStickyPosition,
     createPageScope,
     extractTimestampRange,
     matchesPageScope,
