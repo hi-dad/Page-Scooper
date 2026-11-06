@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Page Scooper",
-  "version": "0.3.2",
-  "description": "Teach any page what to collect, then copy everything together.",
+  "version": "0.3.3",
+  "description": "Teach Page Scooper where a transcript lives, then scoop it anytime.",
   "permissions": [
     "activeTab",
     "clipboardWrite",

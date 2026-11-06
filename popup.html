@@ -7,18 +7,18 @@
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
-    <main>
+    <main id="main-view">
       <header>
         <div class="mark" aria-hidden="true">◡</div>
         <div>
           <h1>Page Scooper</h1>
-          <p>Teach a page once. Scoop it anytime.</p>
+          <p>Searching for transcripts? Teach a page once. Scoop anytime.</p>
         </div>
       </header>
 
       <section class="train-card">
         <div>
-          <span class="eyebrow">THIS SITE</span>
+          <span id="site-eyebrow" class="eyebrow">THIS SITE</span>
           <strong id="site-status">Checking this page…</strong>
         </div>
         <button id="teach-button" class="primary">Choose what to scoop</button>
@@ -34,7 +34,7 @@
 
           <div class="workflow-setting">
             <div class="workflow-heading">
-              <span>Auto-click setup</span>
+              <span id="auto-click-title">Auto-click setup</span>
               <small id="steps-status">Not set up</small>
             </div>
             <div class="button-row">
@@ -46,7 +46,7 @@
               <input id="auto-open-toggle" type="checkbox" disabled>
               <span>Run clicks on page load</span>
             </label>
-            <p id="auto-click-hint" class="setting-hint">Record clicks such as More → Transcript so Page Scooper can reveal your saved content.</p>
+            <p id="auto-click-hint" class="setting-hint">Hidden transcript? Save the necessary clicks, then hit Run now and Page Scooper will make it visible for you.</p>
           </div>
         </div>
         <button id="forget-button" class="text-button" hidden>Forget this site</button>
@@ -55,8 +55,8 @@
       <section class="collection">
         <div class="section-heading">
           <div>
-            <span class="eyebrow">COLLECTION</span>
-            <h2><span id="capture-count">0</span> <span id="capture-label">scoops</span></h2>
+            <span class="eyebrow">TRANSCRIPTS</span>
+            <h2><span id="capture-count">0</span> <span id="capture-label">transcripts</span></h2>
           </div>
           <button id="clear-button" class="text-button" disabled>Clear</button>
         </div>
@@ -65,15 +65,48 @@
           <span>Include timestamps when copying</span>
         </label>
         <div id="capture-list" class="capture-list">
-          <div class="empty-state">Scooped pages will wait here until you copy them together.</div>
+          <div class="empty-state">Scooped transcripts will wait here until you copy them together.</div>
         </div>
         <button id="copy-button" class="copy-button" disabled>Copy everything</button>
       </section>
 
       <div id="message" class="message" role="status" aria-live="polite"></div>
       <footer class="popup-footer">
-        <button id="open-options-button" class="footer-button">Help &amp; saved recipes <span aria-hidden="true">→</span></button>
+        <button id="open-options-button" class="footer-button">Help &amp; saved sites <span aria-hidden="true">→</span></button>
       </footer>
+    </main>
+
+    <main id="help-view" class="help-view" hidden>
+      <div class="subpage-heading">
+        <button id="back-button" class="back-button" aria-label="Back to Page Scooper">←</button>
+        <div>
+          <span class="eyebrow">HELP &amp; SAVED SITES</span>
+          <h1>How Page Scooper works</h1>
+        </div>
+      </div>
+
+      <section class="help-card">
+        <ol class="help-steps">
+          <li><strong>Choose a transcript.</strong><span>Pick the transcript region once so Page Scooper can find it on matching pages.</span></li>
+          <li><strong>Reveal it when needed.</strong><span>For a hidden transcript, record clicks such as More → Transcript. Test them with Run now.</span></li>
+          <li><strong>Scoop and copy.</strong><span>Collect transcripts from several tabs, then copy them together with clear separators.</span></li>
+        </ol>
+        <div class="help-note">
+          <strong>Similar pages</strong> is recommended and can run saved clicks on page load. <strong>Every page on this website</strong> searches the whole site, but keeps saved clicks manual to avoid clicking unrelated controls.
+        </div>
+      </section>
+
+      <section class="help-card saved-sites-card">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">SAVED SITES</span>
+            <h2><span id="saved-site-count">0</span> transcript setups</h2>
+          </div>
+        </div>
+        <div id="saved-site-list" class="saved-site-list"></div>
+      </section>
+
+      <div class="privacy-note"><strong>Local by design.</strong> Your setups stay in extension storage. Transcript text stays only for the current browser session and is never uploaded.</div>
     </main>
     <script src="utils.js"></script>
     <script src="popup.js"></script>

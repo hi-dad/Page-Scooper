@@ -17,6 +17,7 @@ body {
 }
 
 main { padding: 20px; }
+main[hidden] { display: none; }
 
 header {
   display: flex;
@@ -244,3 +245,97 @@ h2 { margin-top: 2px; font-size: 16px; }
 }
 
 .footer-button:hover { color: #173d35; }
+
+.help-view { min-height: 500px; }
+
+.subpage-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 16px;
+}
+
+.subpage-heading h1 { margin-top: 3px; font-size: 18px; }
+
+.back-button {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(23, 61, 53, .14);
+  border-radius: 11px;
+  color: #173d35;
+  background: rgba(255, 253, 246, .9);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.help-card {
+  padding: 15px;
+  border: 1px solid rgba(23, 61, 53, .13);
+  border-radius: 18px;
+  background: rgba(255, 253, 246, .9);
+  box-shadow: 0 8px 28px rgba(23, 61, 53, .05);
+}
+
+.help-card + .help-card { margin-top: 12px; }
+
+.help-steps {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding-left: 23px;
+  color: #173d35;
+  font-size: 11px;
+}
+
+.help-steps li { padding-left: 3px; }
+.help-steps strong, .help-steps span { display: block; }
+.help-steps span { margin-top: 2px; color: #647873; line-height: 1.4; }
+
+.help-note {
+  margin-top: 14px;
+  padding: 11px;
+  border-radius: 11px;
+  color: #5e716b;
+  background: #f7f1e4;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.saved-sites-card h2 { font-size: 15px; }
+.saved-site-list { margin-top: 10px; }
+
+.saved-site-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(23, 61, 53, .1);
+}
+
+.saved-site-item:last-child { border-bottom: 0; padding-bottom: 0; }
+.saved-site-item strong, .saved-site-item span { display: block; }
+.saved-site-item strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.saved-site-item span { margin-top: 3px; color: #7b8985; font-size: 9px; }
+
+.remove-saved-site {
+  border: 0;
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: #8a4e43;
+  background: #f3ecdf;
+  font-size: 9px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.privacy-note {
+  padding: 13px 7px 0;
+  color: #6c7d78;
+  font-size: 9px;
+  line-height: 1.45;
+  text-align: center;
+}

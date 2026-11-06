@@ -18,11 +18,19 @@ const timestampsToggle = document.querySelector("#timestamps-toggle");
 const scopeHint = document.querySelector("#scope-hint");
 const openOptionsButton = document.querySelector("#open-options-button");
 const autoClickHint = document.querySelector("#auto-click-hint");
+const autoClickTitle = document.querySelector("#auto-click-title");
+const siteEyebrow = document.querySelector("#site-eyebrow");
+const mainView = document.querySelector("#main-view");
+const helpView = document.querySelector("#help-view");
+const backButton = document.querySelector("#back-button");
+const savedSiteCount = document.querySelector("#saved-site-count");
+const savedSiteList = document.querySelector("#saved-site-list");
 
 let activeTab;
 let activeOrigin;
 let state = {
   rule: null,
+  rules: [],
   captures: [],
   settings: { includeTimestamps: false }
 };
@@ -30,8 +38,28 @@ let state = {
 initialize();
 
 openOptionsButton.addEventListener("click", () => {
-  chrome.runtime.openOptionsPage();
-  window.close();
+  mainView.hidden = true;
+  helpView.hidden = false;
+  renderSavedSites();
+  window.scrollTo(0, 0);
+});
+
+backButton.addEventListener("click", () => {
+  helpView.hidden = true;
+  mainView.hidden = false;
+  window.scrollTo(0, 0);
+});
+
+savedSiteList.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-remove-origin]");
+  if (!button) return;
+  const origin = button.dataset.removeOrigin;
+  const response = await chrome.runtime.sendMessage({ type: "REMOVE_RULE", origin });
+  if (!response?.ok) return;
+  state.rules = state.rules.filter((rule) => rule.origin !== origin);
+  if (state.rule?.origin === origin) state.rule = null;
+  render();
+  renderSavedSites();
 });
 
 teachButton.addEventListener("click", async () => {
@@ -61,6 +89,7 @@ forgetButton.addEventListener("click", async () => {
     return;
   }
   state.rule = null;
+  state.rules = state.rules.filter((rule) => rule.origin !== activeOrigin);
   chrome.tabs.sendMessage(activeTab.id, { type: "RULE_REMOVED" }).catch(() => {});
   render();
   setMessage("The saved region was removed.");
@@ -166,9 +195,11 @@ async function initialize() {
   }
 
   const response = await chrome.runtime.sendMessage({ type: "GET_STATE", origin: activeOrigin });
+  const { rules = [] } = await chrome.storage.local.get("rules");
   if (response?.ok) {
     state = {
       rule: response.rule,
+      rules,
       captures: response.captures || [],
       settings: response.settings || { includeTimestamps: false }
     };
@@ -183,7 +214,8 @@ async function initialize() {
 
 function render() {
   if (activeOrigin) {
-    siteStatus.textContent = state.rule ? "Ready to scoop" : "No scoop button yet";
+    siteEyebrow.textContent = state.rule ? "LIVE ON THIS SITE" : "THIS SITE";
+    siteStatus.textContent = state.rule ? "Ready to scoop" : "No transcript button yet";
     teachButton.textContent = state.rule ? "Replace saved region" : "Choose what to scoop";
     forgetButton.hidden = !state.rule;
   }
@@ -200,14 +232,15 @@ function render() {
     stepsStatus.textContent = stepCount
       ? `${stepCount} ${pluralize(stepCount, "click")} saved`
       : "Not set up";
+    autoClickTitle.textContent = stepCount ? "Auto-click setup: active" : "Auto-click setup";
     recordStepsButton.textContent = stepCount ? "Replace clicks" : "Record clicks";
     runStepsButton.hidden = !stepCount;
     clearStepsButton.hidden = !stepCount;
     autoOpenToggle.disabled = !stepCount || siteWide;
     autoOpenToggle.checked = Boolean(stepCount && !siteWide && state.rule.autoOpen);
     autoClickHint.textContent = siteWide
-      ? "Site-wide recipes keep recorded clicks manual for safety. Choose Similar pages to run them on page load."
-      : "Record clicks such as More → Transcript so Page Scooper can reveal your saved content.";
+      ? "Saving clicks across the whole site is disabled to prevent unwanted clicks. Choose Similar pages to run them on page load."
+      : "Hidden transcript? Save the necessary clicks, then hit Run now and Page Scooper will make it visible for you.";
     scopeHint.textContent = describeScope(state.rule.scope, activeTab.url);
   }
 
@@ -215,12 +248,12 @@ function render() {
 
   const captures = state.captures || [];
   captureCount.textContent = captures.length;
-  captureLabel.textContent = pluralize(captures.length, "scoop");
+  captureLabel.textContent = pluralize(captures.length, "transcript");
   clearButton.disabled = !captures.length;
   copyButton.disabled = !captures.length;
 
   if (!captures.length) {
-    captureList.innerHTML = '<div class="empty-state">Scooped pages will wait here until you copy them together.</div>';
+    captureList.innerHTML = '<div class="empty-state">Scooped transcripts will wait here until you copy them together.</div>';
     return;
   }
 
@@ -251,6 +284,40 @@ function render() {
     item.append(title, meta, remove);
     return item;
   }));
+}
+
+function renderSavedSites() {
+  const rules = state.rules || [];
+  savedSiteCount.textContent = rules.length;
+  if (!rules.length) {
+    savedSiteList.innerHTML = '<div class="empty-state">No saved transcript setups yet.</div>';
+    return;
+  }
+
+  savedSiteList.replaceChildren(...rules
+    .slice()
+    .sort((a, b) => String(b.updatedAt).localeCompare(String(a.updatedAt)))
+    .map((rule) => {
+      const item = document.createElement("div");
+      item.className = "saved-site-item";
+      const text = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = safeHostname(rule.origin);
+      const detail = document.createElement("span");
+      const clickCount = rule.openerSteps?.length || 0;
+      detail.textContent = [
+        rule.scope?.type === "origin" ? "Every page on this website" : "Similar pages",
+        clickCount ? `${clickCount} saved ${pluralize(clickCount, "click")}` : "No saved clicks"
+      ].join(" · ");
+      text.append(title, detail);
+      const remove = document.createElement("button");
+      remove.className = "remove-saved-site";
+      remove.dataset.removeOrigin = rule.origin;
+      remove.textContent = "Forget";
+      remove.setAttribute("aria-label", `Forget ${safeHostname(rule.origin)}`);
+      item.append(text, remove);
+      return item;
+    }));
 }
 
 async function ensureContentScript(tabId) {
@@ -288,6 +355,10 @@ async function saveRulePatch(patch) {
     return null;
   }
   state.rule = response.rule;
+  state.rules = [
+    ...state.rules.filter((rule) => rule.origin !== response.rule.origin),
+    response.rule
+  ];
   chrome.tabs.sendMessage(activeTab.id, { type: "RULE_UPDATED", rule: state.rule }).catch(() => {});
   render();
   return state.rule;
@@ -296,13 +367,21 @@ async function saveRulePatch(patch) {
 function describeScope(scope, pageUrl) {
   const url = new URL(pageUrl);
   if (!scope || scope.type === "origin") {
-    return `Looks for the same saved element on every page at ${url.hostname}.`;
+    return `Looks for the selected webpage component on every page at ${url.hostname}.`;
   }
 
   if (scope.type === "path-prefix") {
     return `Looks for the same saved element on ${url.hostname}${scope.value}…`;
   }
   return `Looks for the same saved element on ${url.hostname}${scope.value || url.pathname}.`;
+}
+
+function safeHostname(value) {
+  try {
+    return new URL(value).hostname;
+  } catch {
+    return "Saved site";
+  }
 }
 
 function toOriginPattern(origin) {

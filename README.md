@@ -1,8 +1,8 @@
 # Page Scooper
 
-Teach any page what to collect, then copy everything together.
+Searching for transcripts? Teach a page once. Scoop anytime.
 
-Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on a site once, and it adds a reusable **Scoop this page** button whenever you return. Captures from multiple tabs collect inside the extension until you copy them as one organized document.
+Page Scooper is an early Manifest V3 Chrome extension for transcripts. Select a transcript region on a site once, and it adds a reusable **Scoop this page** button whenever you return. Transcripts from multiple tabs collect inside the extension until you copy them as one organized document.
 
 ## Try it locally
 
@@ -27,6 +27,7 @@ Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on
 - Similar-page and entire-site recipe scopes
 - A Scoop button that stays anchored to the visible part of nested, scrollable content
 - Axis-aware clipping and a viewport fallback so valid Scoop buttons remain reachable
+- An in-popup help view with every saved transcript setup
 - No analytics, server, account, or uploaded page content
 
 The current capture method reads visible rendered text. Pages that virtualize long transcripts may expose only the currently rendered portion; an auto-scroll collector is planned for a later iteration.
