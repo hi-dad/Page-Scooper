@@ -221,3 +221,26 @@ h2 { margin-top: 2px; font-size: 16px; }
 }
 
 .message.error { color: #9a3434; }
+
+.popup-footer {
+  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(23, 61, 53, .1);
+}
+
+.footer-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  padding: 8px;
+  color: #526761;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.footer-button:hover { color: #173d35; }

@@ -16,6 +16,8 @@ const clearStepsButton = document.querySelector("#clear-steps-button");
 const autoOpenToggle = document.querySelector("#auto-open-toggle");
 const timestampsToggle = document.querySelector("#timestamps-toggle");
 const scopeHint = document.querySelector("#scope-hint");
+const openOptionsButton = document.querySelector("#open-options-button");
+const autoClickHint = document.querySelector("#auto-click-hint");
 
 let activeTab;
 let activeOrigin;
@@ -26,6 +28,11 @@ let state = {
 };
 
 initialize();
+
+openOptionsButton.addEventListener("click", () => {
+  chrome.runtime.openOptionsPage();
+  window.close();
+});
 
 teachButton.addEventListener("click", async () => {
   if (!activeTab?.id || !activeOrigin) return;
@@ -60,7 +67,11 @@ forgetButton.addEventListener("click", async () => {
 });
 
 scopeSelect.addEventListener("change", async () => {
-  await saveRulePatch({ scope: PageScooperUtils.createPageScope(scopeSelect.value, activeTab.url) });
+  const scope = PageScooperUtils.createPageScope(scopeSelect.value, activeTab.url);
+  await saveRulePatch({
+    scope,
+    ...(scope.type === "origin" ? { autoOpen: false } : {})
+  });
   setMessage("Page matching updated.");
 });
 
@@ -87,7 +98,7 @@ runStepsButton.addEventListener("click", async () => {
       type: "RUN_OPENING_STEPS",
       rule: state.rule
     });
-    setMessage(response?.ok ? "Running the saved opening steps…" : response?.error, !response?.ok);
+    setMessage(response?.ok ? "Running the saved clicks…" : response?.error, !response?.ok);
   } catch (error) {
     setMessage(readableError(error), true);
   }
@@ -95,7 +106,7 @@ runStepsButton.addEventListener("click", async () => {
 
 clearStepsButton.addEventListener("click", async () => {
   await saveRulePatch({ openerSteps: [], autoOpen: false });
-  setMessage("Opening steps cleared.");
+  setMessage("Recorded clicks cleared.");
 });
 
 autoOpenToggle.addEventListener("change", async () => {
@@ -173,26 +184,30 @@ async function initialize() {
 function render() {
   if (activeOrigin) {
     siteStatus.textContent = state.rule ? "Ready to scoop" : "No scoop button yet";
-    teachButton.textContent = state.rule ? "Choose a different region" : "Choose what to scoop";
+    teachButton.textContent = state.rule ? "Replace saved region" : "Choose what to scoop";
     forgetButton.hidden = !state.rule;
   }
 
   ruleSettings.hidden = !state.rule;
   if (state.rule) {
     const stepCount = state.rule.openerSteps?.length || 0;
+    const siteWide = !state.rule.scope || state.rule.scope.type === "origin";
     scopeSelect.value = state.rule.scope?.type === "origin"
         ? "origin"
         : state.rule.scope
           ? "similar"
           : "origin";
     stepsStatus.textContent = stepCount
-      ? `${stepCount} ${pluralize(stepCount, "step")} saved`
-      : "Not configured";
-    recordStepsButton.textContent = stepCount ? "Replace steps" : "Record steps";
+      ? `${stepCount} ${pluralize(stepCount, "click")} saved`
+      : "Not set up";
+    recordStepsButton.textContent = stepCount ? "Replace clicks" : "Record clicks";
     runStepsButton.hidden = !stepCount;
     clearStepsButton.hidden = !stepCount;
-    autoOpenToggle.disabled = !stepCount;
-    autoOpenToggle.checked = Boolean(stepCount && state.rule.autoOpen);
+    autoOpenToggle.disabled = !stepCount || siteWide;
+    autoOpenToggle.checked = Boolean(stepCount && !siteWide && state.rule.autoOpen);
+    autoClickHint.textContent = siteWide
+      ? "Site-wide recipes keep recorded clicks manual for safety. Choose Similar pages to run them on page load."
+      : "Record clicks such as More → Transcript so Page Scooper can reveal your saved content.";
     scopeHint.textContent = describeScope(state.rule.scope, activeTab.url);
   }
 

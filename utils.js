@@ -174,8 +174,17 @@
     };
   }
 
+  function canRunRecipeAutomatically(rule) {
+    return Boolean(
+      rule?.autoOpen
+      && rule.openerSteps?.length
+      && ["path", "path-prefix"].includes(rule.scope?.type)
+    );
+  }
+
   const api = Object.freeze({
     calculateStickyPosition,
+    canRunRecipeAutomatically,
     createPageScope,
     extractTimestampRange,
     matchesPageScope,

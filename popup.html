@@ -34,19 +34,19 @@
 
           <div class="workflow-setting">
             <div class="workflow-heading">
-              <span>Opening steps</span>
-              <small id="steps-status">Not configured</small>
+              <span>Auto-click setup</span>
+              <small id="steps-status">Not set up</small>
             </div>
             <div class="button-row">
-              <button id="record-steps-button" class="secondary" title="Start on a page where the saved content is closed">Record steps</button>
+              <button id="record-steps-button" class="secondary" title="Start on a page where the saved content is closed">Record clicks</button>
               <button id="run-steps-button" class="secondary" hidden>Run now</button>
-              <button id="clear-steps-button" class="icon-button" title="Clear opening steps" hidden>×</button>
+              <button id="clear-steps-button" class="icon-button" title="Clear recorded clicks" hidden>×</button>
             </div>
             <label class="toggle-row">
               <input id="auto-open-toggle" type="checkbox" disabled>
-              <span>Run automatically</span>
+              <span>Run clicks on page load</span>
             </label>
-            <p class="setting-hint">Choose controls that exist on matching pages. Their displayed text can change.</p>
+            <p id="auto-click-hint" class="setting-hint">Record clicks such as More → Transcript so Page Scooper can reveal your saved content.</p>
           </div>
         </div>
         <button id="forget-button" class="text-button" hidden>Forget this site</button>
@@ -71,6 +71,9 @@
       </section>
 
       <div id="message" class="message" role="status" aria-live="polite"></div>
+      <footer class="popup-footer">
+        <button id="open-options-button" class="footer-button">Help &amp; saved recipes <span aria-hidden="true">→</span></button>
+      </footer>
     </main>
     <script src="utils.js"></script>
     <script src="popup.js"></script>

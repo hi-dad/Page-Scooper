@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Page Scooper — Guide & saved recipes</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <header class="page-header">
+      <div class="brand-mark" aria-hidden="true">◡</div>
+      <div>
+        <h1>Page Scooper</h1>
+        <p>Guide, preferences, and everything you’ve saved.</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel guide-panel">
+        <div class="section-title">
+          <span class="eyebrow">HOW IT WORKS</span>
+          <h2>Teach once, then scoop across pages</h2>
+        </div>
+        <div class="guide-grid">
+          <article>
+            <span class="step-number">1</span>
+            <h3>Choose a region</h3>
+            <p>Select the transcript or page area you want to collect. Page Scooper saves its element fingerprint.</p>
+          </article>
+          <article>
+            <span class="step-number">2</span>
+            <h3>Reveal hidden content</h3>
+            <p>Use <strong>Auto-click setup</strong> to record clicks such as More → Transcript. Enable page-load running only after <strong>Run now</strong> works.</p>
+          </article>
+          <article>
+            <span class="step-number">3</span>
+            <h3>Build a collection</h3>
+            <p>Scoop content from multiple tabs, review the collection, and copy everything as one organized document.</p>
+          </article>
+        </div>
+        <div class="explanation-grid">
+          <div>
+            <h3>Similar pages</h3>
+            <p>Recommended. It looks for the same saved element only on matching page types, such as YouTube watch pages.</p>
+          </div>
+          <div>
+            <h3>Every page on a website</h3>
+            <p>It looks for the same saved element on every URL under that domain. Recorded clicks remain manual in this mode for safety.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel preferences-panel">
+        <div>
+          <span class="eyebrow">PREFERENCE</span>
+          <h2>Copied transcript format</h2>
+          <p>Timestamp ranges remain visible in your collection either way.</p>
+        </div>
+        <label class="switch-row">
+          <input id="timestamps-toggle" type="checkbox">
+          <span>Include timestamps when copying</span>
+        </label>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">LIBRARY</span>
+            <h2>Saved site recipes <span id="recipe-count" class="count-pill">0</span></h2>
+            <p>Persistent regions and auto-click setups Page Scooper remembers.</p>
+          </div>
+        </div>
+        <div id="recipe-list" class="item-list"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">THIS BROWSER SESSION</span>
+            <h2>Current collection <span id="capture-count" class="count-pill">0</span></h2>
+            <p>Content waiting to be copied together. This clears when the browser session ends.</p>
+          </div>
+          <button id="clear-captures-button" class="text-button" disabled>Clear collection</button>
+        </div>
+        <div id="capture-list" class="item-list"></div>
+      </section>
+
+      <section class="privacy-note">
+        <strong>Local by design.</strong> Recipes and preferences stay in extension storage. Captured page content is kept only for the current browser session and is not uploaded.
+      </section>
+    </main>
+
+    <script src="utils.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

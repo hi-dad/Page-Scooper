@@ -99,10 +99,15 @@
 
       const target = hovered;
       cancel();
+      const sampleText = normalizeText(target.innerText);
+      if (!sampleText) {
+        showToast("That element has no visible text to scoop. Select its surrounding text container instead.", "error");
+        return;
+      }
       const rule = {
         origin: location.origin,
         locator: buildLocator(target),
-        sampleText: normalizeText(target.innerText).slice(0, 160),
+        sampleText: sampleText.slice(0, 160),
         scope: PageScooperUtils.createPageScope("similar", location.href)
       };
 
@@ -183,7 +188,7 @@
       font: 600 12px/1.35 system-ui, sans-serif;
     `;
     const title = document.createElement("strong");
-    title.textContent = "Record the clicks that reveal your content";
+    title.textContent = "Auto-click setup";
     title.style.cssText = "display:block;font-size:13px;margin-bottom:2px";
     const detail = document.createElement("span");
     detail.textContent = "Start with it closed. Click reusable controls in order; their text may change between pages.";
@@ -254,11 +259,11 @@
       });
       cleanup();
       if (!response?.ok) {
-        showToast(response?.error || "Those opening steps could not be saved.", "error");
+        showToast(response?.error || "Those clicks could not be saved.", "error");
         return;
       }
       watchSavedRule(response.rule);
-      showToast(`${steps.length} ${steps.length === 1 ? "opening step" : "opening steps"} saved.`);
+      showToast(`${steps.length} recorded ${steps.length === 1 ? "click" : "clicks"} saved.`);
     });
 
     activeStepRecorder = { cancel };
@@ -457,7 +462,7 @@
       if (!target) {
         activeMount?.destroy();
         if (
-          rule.autoOpen
+          PageScooperUtils.canRunRecipeAutomatically(rule)
           && rule.openerSteps?.length
           && attemptedAutoOpenUrl !== location.href
         ) {
@@ -505,7 +510,7 @@
 
   function runOpeningSteps(rule, { announce = false } = {}) {
     if (!rule?.openerSteps?.length) {
-      if (announce) showToast("No opening steps are configured for this site.", "error");
+      if (announce) showToast("No auto-click setup is configured for this site.", "error");
       return Promise.resolve(false);
     }
     if (openingRun) return openingRun;
@@ -540,7 +545,7 @@
         if (announce) showToast("Saved content opened.");
         return true;
       } catch (error) {
-        if (announce) showToast(error.message || "The opening steps could not finish.", "error");
+        if (announce) showToast(error.message || "The recorded clicks could not finish.", "error");
         return false;
       } finally {
         openingRun = null;

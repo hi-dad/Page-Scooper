@@ -30,11 +30,13 @@ Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on
 
 The current capture method reads visible rendered text. Pages that virtualize long transcripts may expose only the currently rendered portion; an auto-scroll collector is planned for a later iteration.
 
-## Opening steps
+## Auto-click setup
 
-If content is hidden behind controls such as **Description → Show transcript**, open a page where the content is still closed and choose **Record steps** in Page Scooper. Click each page control in order, then choose **Done** in the floating recorder. You can replay the workflow with **Run now** or enable **Run automatically** for matching pages.
+If content is hidden behind controls such as **Description → Show transcript**, open a page where the content is still closed and choose **Record clicks** in Page Scooper. Click each page control in order, then choose **Done** in the floating recorder. You can replay the workflow with **Run now** or enable **Run clicks on page load** for matching pages.
 
 Page Scooper fingerprints controls using stable IDs, accessibility labels, classes, and page structure—not their displayed text. A video-specific title can therefore work when the same structural element exists on other videos, although choosing a consistent control is still the most reliable approach.
+
+For safety, recorded clicks can run automatically only on **Similar pages**. A recipe scoped to **Every page on this website** may still find its saved region site-wide, but its recorded clicks must be run manually.
 
 Synthetic clicks work with ordinary page controls. Sites may still require manual interaction when controls live in inaccessible cross-origin frames or explicitly reject scripted clicks.
 

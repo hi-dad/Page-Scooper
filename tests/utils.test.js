@@ -2,6 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
   calculateStickyPosition,
+  canRunRecipeAutomatically,
   createPageScope,
   extractTimestampRange,
   matchesPageScope,
@@ -136,4 +137,12 @@ test("hides a sticky button when its selected content is fully clipped", () => {
     ),
     null
   );
+});
+
+test("allows automatic clicks only for page-type-scoped recipes", () => {
+  const baseRule = { autoOpen: true, openerSteps: [{ locator: {} }] };
+  assert.equal(canRunRecipeAutomatically({ ...baseRule, scope: { type: "path", value: "/watch" } }), true);
+  assert.equal(canRunRecipeAutomatically({ ...baseRule, scope: { type: "path-prefix", value: "/courses/" } }), true);
+  assert.equal(canRunRecipeAutomatically({ ...baseRule, scope: { type: "origin" } }), false);
+  assert.equal(canRunRecipeAutomatically({ ...baseRule, scope: null }), false);
 });
