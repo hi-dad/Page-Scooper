@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Page Scooper",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Teach any page what to collect, then copy everything together.",
   "permissions": [
     "activeTab",

@@ -174,6 +174,17 @@
     };
   }
 
+  function calculateResilientStickyPosition(
+    targetRect,
+    clipRects,
+    viewportRect,
+    buttonSize,
+    gap = 12
+  ) {
+    return calculateStickyPosition(targetRect, clipRects, viewportRect, buttonSize, gap)
+      || calculateStickyPosition(targetRect, [], viewportRect, buttonSize, gap);
+  }
+
   function canRunRecipeAutomatically(rule) {
     return Boolean(
       rule?.autoOpen
@@ -183,6 +194,7 @@
   }
 
   const api = Object.freeze({
+    calculateResilientStickyPosition,
     calculateStickyPosition,
     canRunRecipeAutomatically,
     createPageScope,

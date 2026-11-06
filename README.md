@@ -47,3 +47,13 @@ Synthetic clicks work with ordinary page controls. Sites may still require manua
 - `background.js` — saved rules, dynamic script registration, capture collection, and badge state
 - `content.js` — region picker, resilient locator creation, injected scoop button, and page capture
 - `popup.*` — training controls and collection interface
+
+## Testing
+
+Run the complete validation suite with:
+
+```sh
+npm run check
+```
+
+The sticky-button matrix tests top, middle, bottom, initially offset, nested, and horizontal scroll positions. GitHub Actions runs the same validation on every push and pull request, so changes cannot merge with a failing button-visibility invariant.

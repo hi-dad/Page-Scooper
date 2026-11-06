@@ -410,14 +410,9 @@
           left: clipsX ? ancestorRect.left : Number.NEGATIVE_INFINITY
         };
       });
-      const placement = PageScooperUtils.calculateStickyPosition(
+      const placement = PageScooperUtils.calculateResilientStickyPosition(
         rect,
         clipRects,
-        viewportRect,
-        { width: buttonRect.width, height: buttonRect.height }
-      ) || PageScooperUtils.calculateStickyPosition(
-        rect,
-        [],
         viewportRect,
         { width: buttonRect.width, height: buttonRect.height }
       );

@@ -1,0 +1,13 @@
+{
+  "name": "page-scooper",
+  "version": "0.3.2",
+  "private": true,
+  "description": "Teach any page what to collect, then copy everything together.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "check": "node --check background.js && node --check content.js && node --check popup.js && node --check options.js && node --check utils.js && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
