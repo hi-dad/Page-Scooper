@@ -26,6 +26,7 @@ Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on
 - Recorded multi-step opening workflows, with manual replay or automatic opening
 - Similar-page and entire-site recipe scopes
 - A Scoop button that stays anchored to the visible part of nested, scrollable content
+- Axis-aware clipping and a viewport fallback so valid Scoop buttons remain reachable
 - No analytics, server, account, or uploaded page content
 
 The current capture method reads visible rendered text. Pages that virtualize long transcripts may expose only the currently rendered portion; an auto-scroll collector is planned for a later iteration.

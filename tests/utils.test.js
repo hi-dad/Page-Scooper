@@ -139,6 +139,23 @@ test("hides a sticky button when its selected content is fully clipped", () => {
   );
 });
 
+test("does not apply one-axis clipping to the other axis", () => {
+  assert.deepEqual(
+    calculateStickyPosition(
+      { top: 300, right: 900, bottom: 700, left: 400 },
+      [{
+        top: 350,
+        right: Number.POSITIVE_INFINITY,
+        bottom: 650,
+        left: Number.NEGATIVE_INFINITY
+      }],
+      { top: 0, right: 1200, bottom: 800, left: 0 },
+      { width: 180, height: 40 }
+    ),
+    { left: 708, top: 362 }
+  );
+});
+
 test("allows automatic clicks only for page-type-scoped recipes", () => {
   const baseRule = { autoOpen: true, openerSteps: [{ locator: {} }] };
   assert.equal(canRunRecipeAutomatically({ ...baseRule, scope: { type: "path", value: "/watch" } }), true);

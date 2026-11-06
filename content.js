@@ -383,7 +383,11 @@
 
     let resetTimer = null;
     const clippingAncestors = getClippingAncestors(target);
-    const scrollTargets = new Set([window, document, ...clippingAncestors]);
+    const scrollTargets = new Set([
+      window,
+      document,
+      ...clippingAncestors.map(({ element }) => element)
+    ]);
 
     const position = () => {
       if (!target.isConnected || !host.isConnected) return;
@@ -391,10 +395,30 @@
       host.style.display = "block";
       host.style.visibility = "hidden";
       const buttonRect = host.getBoundingClientRect();
+      const viewportRect = {
+        top: 0,
+        right: window.innerWidth,
+        bottom: window.innerHeight,
+        left: 0
+      };
+      const clipRects = clippingAncestors.map(({ element, clipsX, clipsY }) => {
+        const ancestorRect = element.getBoundingClientRect();
+        return {
+          top: clipsY ? ancestorRect.top : Number.NEGATIVE_INFINITY,
+          right: clipsX ? ancestorRect.right : Number.POSITIVE_INFINITY,
+          bottom: clipsY ? ancestorRect.bottom : Number.POSITIVE_INFINITY,
+          left: clipsX ? ancestorRect.left : Number.NEGATIVE_INFINITY
+        };
+      });
       const placement = PageScooperUtils.calculateStickyPosition(
         rect,
-        clippingAncestors.map((element) => element.getBoundingClientRect()),
-        { top: 0, right: window.innerWidth, bottom: window.innerHeight, left: 0 },
+        clipRects,
+        viewportRect,
+        { width: buttonRect.width, height: buttonRect.height }
+      ) || PageScooperUtils.calculateStickyPosition(
+        rect,
+        [],
+        viewportRect,
         { width: buttonRect.width, height: buttonRect.height }
       );
       if (!placement) {
@@ -432,7 +456,7 @@
       element.addEventListener("scroll", position, { passive: true, capture: true });
     });
     resizeObserver.observe(target);
-    clippingAncestors.forEach((element) => resizeObserver.observe(element));
+    clippingAncestors.forEach(({ element }) => resizeObserver.observe(element));
 
     activeMount = { host, target, destroy, position, reset };
     return activeMount;
@@ -589,7 +613,7 @@
       const style = getComputedStyle(parent);
       const clipsX = /(auto|scroll|hidden|clip)/.test(style.overflowX);
       const clipsY = /(auto|scroll|hidden|clip)/.test(style.overflowY);
-      if (clipsX || clipsY) ancestors.push(parent);
+      if (clipsX || clipsY) ancestors.push({ element: parent, clipsX, clipsY });
       parent = parent.parentElement;
     }
     return ancestors;
