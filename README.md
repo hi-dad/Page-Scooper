@@ -24,7 +24,7 @@ Page Scooper is an early Manifest V3 Chrome extension. Select a useful region on
 - Rebinding on single-page-app navigation, including sites that switch videos without reloading
 - Optional clean-copy mode that removes transcript timestamps without discarding the original capture
 - Recorded multi-step opening workflows, with manual replay or automatic opening
-- Exact-page, similar-page, and entire-site recipe scopes
+- Similar-page and entire-site recipe scopes
 - A Scoop button that stays anchored to the visible part of nested, scrollable content
 - No analytics, server, account, or uploaded page content
 

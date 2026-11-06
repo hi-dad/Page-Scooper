@@ -161,6 +161,11 @@ async function initialize() {
       captures: response.captures || [],
       settings: response.settings || { includeTimestamps: false }
     };
+    if (state.rule?.scope?.type === "exact") {
+      await saveRulePatch({
+        scope: PageScooperUtils.createPageScope("similar", activeTab.url)
+      });
+    }
   }
   render();
 }
@@ -175,9 +180,7 @@ function render() {
   ruleSettings.hidden = !state.rule;
   if (state.rule) {
     const stepCount = state.rule.openerSteps?.length || 0;
-    scopeSelect.value = state.rule.scope?.type === "exact"
-      ? "exact"
-      : state.rule.scope?.type === "origin"
+    scopeSelect.value = state.rule.scope?.type === "origin"
         ? "origin"
         : state.rule.scope
           ? "similar"
@@ -277,7 +280,6 @@ async function saveRulePatch(patch) {
 
 function describeScope(scope, pageUrl) {
   const url = new URL(pageUrl);
-  if (scope?.type === "exact") return "Looks for the same saved element only at this exact URL.";
   if (!scope || scope.type === "origin") {
     return `Looks for the same saved element on every page at ${url.hostname}.`;
   }
